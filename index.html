@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+    }
+    body {
+        padding: 20px;
+    }
+    .source {
+        width: 400px;
+        padding-right: 20px;
+        float: left;
+    }
+    .result {
+        width: 660px;
+        float: left;
+    }
+    .source textarea,
+    .code-output {
+        height: 10em;
+        width: 100%;
+    }
+    </style>
+</head>
+
+<body>
+
+<div class="source">
+    <form>
+        <label>Enter a list of model pages below (1 per line):</label><br>
+        <textarea rows="15" cols="60"></textarea><br>
+        <label>Viewer ID</label><br>
+        <input type="text" name="viewerId" placeholder="ViewerID" value="skfb-gallery"><br>
+        <button type="submit">Generate gallery</button>
+    </form>
+</div>
+
+<div class="result">
+    <div class="preview"></div>
+    <div class="code">
+        Output code:<br>
+        <textarea class="code-output" readonly></textarea>
+    </div>
+</div>
+
+<script type="text/template" id="output-template">
+<iframe src="<%= models[0].embedUrl %>" name="<%= viewerId %>" width="640" height="400" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe><br>
+<div style="overflow:hidden">
+<% for (var i=0; i<models.length; i++) { %>
+<a href="<%= models[i].embedUrl %>" target="<%= viewerId %>" style="display:block; float: left;">
+    <img src="<%= models[i].thumbnail %>" alt="<%= models[i].name %>" width="<%= thumbnailWidth %>" title="<%= models[i].name %>">
+</a>
+<% } %>
+</div>
+</script>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+
+function getUid(str) {
+    var modelRegexp = /https:\/\/sketchfab.com\/models\/([^\/\?]+)/;
+    var match = str.match(modelRegexp);
+    if (match) {
+        return match[1];
+    }
+    return false;
+}
+
+function parseInput() {
+    var lines = $('.source textarea').val();
+    if ($.trim(lines) != '') {
+        lines = lines.split('\n');
+        return $.map(lines, function(line, i){
+            return getUid($.trim(line));
+        });
+    }
+    return [];
+}
+
+function getModelInfo(uid) {
+    var url = 'https://api.sketchfab.com/v2/models/' + uid;
+    return $.ajax({
+        url: url,
+        dataType: 'json'
+    });
+}
+
+$(function(){
+    var $form = $('form');
+    var $preview = $('.preview');
+    var $codeOutput = $('.code-output');
+    var viewerId = $('[name="viewerId"]').val();
+    var outputTemplate = _.template($('#output-template').html());
+
+    $form.on('submit', function(e){
+        e.preventDefault();
+        $codeOutput.val('Loading models');
+        var uids = parseInput();
+        var requests = [];
+        $.each(uids, function(i, uid){
+            requests.push(getModelInfo(uid));
+        });
+        $.when.apply($, requests).done(function(){
+
+            var thumbnailWidth = Math.floor(640 / arguments.length);
+
+            var models = $.map(Array.prototype.slice.call(arguments), function(model, i){
+
+                var imageUrl = '';
+                for (var i=0;i<model[0].thumbnails.images.length; i++) {
+                    if (model[0].thumbnails.images[i].width > 2*thumbnailWidth ) {
+                        imageUrl = model[0].thumbnails.images[i].url;
+                    }
+                }
+
+                return {
+                    name: model[0].name,
+                    thumbnails: model[0].thumbnails,
+                    thumbnail: imageUrl,
+                    embedUrl: model[0].embedUrl,
+                    viewerUrl: model[0].viewerUrl
+                }
+            });
+            console.log(models);
+
+            var output = outputTemplate({
+                models: models,
+                viewerId: viewerId,
+                thumbnailWidth: Math.floor(640/models.length)
+            });
+
+            $codeOutput.val(output);
+            $preview.html(output);
+        });
+    });
+});
+</script>
+</body>
+</html>
