@@ -97,7 +97,6 @@ $(function(){
     var $form = $('form');
     var $preview = $('.preview');
     var $codeOutput = $('.code-output');
-    var viewerId = $('[name="viewerId"]').val();
     var outputTemplate = _.template($('#output-template').html());
 
     $form.on('submit', function(e){
@@ -133,7 +132,7 @@ $(function(){
 
             var output = outputTemplate({
                 models: models,
-                viewerId: viewerId,
+                viewerId: $('[name="viewerId"]').val(),
                 thumbnailWidth: Math.floor(640/models.length)
             });
 
