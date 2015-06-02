@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Sketchfab HTML Gallery generator</title>
     <style type="text/css">
     html,
     body {
@@ -93,6 +93,27 @@ function getModelInfo(uid) {
     });
 }
 
+function getThumbnail(images, size) {
+
+    var sortedImages = _.sortBy(images, function( image ){
+        return image.width;
+    });
+
+    var thumbnailUrl = '';
+    for (var i=0;i<sortedImages.length; i++) {
+
+        if ( sortedImages[i].width === sortedImages[i].height ) {
+            continue;
+        }
+
+        if (sortedImages[i].width > size ) {
+            thumbnailUrl = sortedImages[i].url;
+            break;
+        }
+    }
+    return thumbnailUrl;
+}
+
 $(function(){
     var $form = $('form');
     var $preview = $('.preview');
@@ -109,16 +130,16 @@ $(function(){
         });
         $.when.apply($, requests).done(function(){
 
-            var thumbnailWidth = Math.floor(640 / arguments.length);
+            var thumbnailWidth;
+            if (arguments.length <= 5) {
+                thumbnailWidth = Math.floor(640 / arguments.length);
+            } else {
+                thumbnailWidth = Math.floor(640 / (arguments.length / 2));
+            }
 
             var models = $.map(Array.prototype.slice.call(arguments), function(model, i){
 
-                var imageUrl = '';
-                for (var i=0;i<model[0].thumbnails.images.length; i++) {
-                    if (model[0].thumbnails.images[i].width > 2*thumbnailWidth ) {
-                        imageUrl = model[0].thumbnails.images[i].url;
-                    }
-                }
+                var imageUrl = getThumbnail(model[0].thumbnails.images, 2 * thumbnailWidth);
 
                 return {
                     name: model[0].name,
@@ -133,7 +154,7 @@ $(function(){
             var output = outputTemplate({
                 models: models,
                 viewerId: $('[name="viewerId"]').val(),
-                thumbnailWidth: Math.floor(640/models.length)
+                thumbnailWidth: thumbnailWidth
             });
 
             $codeOutput.val(output);
