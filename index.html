@@ -89,7 +89,8 @@ function getModelInfo(uid) {
     var url = 'https://api.sketchfab.com/v2/models/' + uid;
     return $.ajax({
         url: url,
-        dataType: 'json'
+        dataType: 'json',
+        crossDomain: true
     });
 }
 
@@ -124,9 +125,12 @@ $(function(){
         e.preventDefault();
         $codeOutput.val('Loading models');
         var uids = parseInput();
+        console.log(uids);
         var requests = [];
         $.each(uids, function(i, uid){
-            requests.push(getModelInfo(uid));
+            if (uid) {
+                requests.push(getModelInfo(uid));
+            }
         });
         $.when.apply($, requests).done(function(){
 
