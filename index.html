@@ -53,17 +53,26 @@
 <script type="text/template" id="output-template">
 <iframe src="<%= models[0].embedUrl %>" name="<%= viewerId %>" width="640" height="400" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" onmousewheel=""></iframe><br>
 <div style="overflow:hidden">
-<% for (var i=0; i<models.length; i++) { %>
-<a href="<%= models[i].embedUrl %>" target="<%= viewerId %>" style="display:block; float: left;">
-    <img src="<%= models[i].thumbnail %>" alt="<%= models[i].name %>" width="<%= thumbnailWidth %>" title="<%= models[i].name %>">
-</a>
-<% } %>
+<% for (var i=0; i<models.length; i++) { %><a href="<%= models[i].embedUrl %>" target="<%= viewerId %>"><img src="<%= models[i].thumbnail %>" alt="<%= models[i].name %>" width="<%= thumbnailWidth %>" title="<%= models[i].name %>"></a><% } %>
 </div>
 </script>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 <script type="text/javascript">
+
+// $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
+//     var url;
+//     if ( originalOptions.data ) {
+//         url = originalOptions.url + '?' + $.param(originalOptions.data);
+//     } else {
+//         url = originalOptions.url
+//     }
+//     if (options.crossDomain) {
+//         options.url = "http://www.inertie.org/ba-simple-proxy.php?mode=native&url=" + encodeURIComponent(url);
+//         options.crossDomain = false;
+//     }
+// });
 
 function getUid(str) {
     var modelRegexp = /https:\/\/sketchfab.com\/models\/([^\/\?]+)/;
